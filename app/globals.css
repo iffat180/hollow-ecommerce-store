@@ -1,26 +1,76 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Color Palette */
+  --color-background: #f2f0e9;
+  --color-primary: #c46a44;
+  --color-text: #3a3a3a;
+  
+  /* Font Families */
+  --font-family-sans: var(--font-roboto), ui-sans-serif, system-ui, sans-serif;
+  --font-family-mono: var(--font-roboto-mono), ui-monospace, monospace;
+  --font-family-serif: var(--font-roboto-slab), ui-serif, Georgia, serif;
+  --font-family-condensed: var(--font-roboto-condensed), sans-serif;
+  --font-family-flex: var(--font-roboto-flex), sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Global Styles */
+* {
+  margin: 0;
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
+}
+
+/* Optional: Remove default list styles */
+ul, ol {
+  list-style: none;
+}
+
+/* Optional: Remove default button styles */
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Optional: Better image defaults */
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* Optional: Remove default form element styling */
+input, button, textarea, select {
+  font: inherit;
+}
+
+/* Utility classes for easy font switching */
+.font-roboto {
+  font-family: var(--font-family-sans);
+}
+
+.font-roboto-mono {
+  font-family: var(--font-family-mono);
+}
+
+.font-roboto-slab {
+  font-family: var(--font-family-serif);
+}
+
+.font-roboto-condensed {
+  font-family: var(--font-family-condensed);
+}
+
+.font-roboto-flex {
+  font-family: var(--font-family-flex);
 }
