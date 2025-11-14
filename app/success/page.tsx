@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCart } from "@/context/CartContext";
@@ -7,7 +8,7 @@ import Button from "@/components/ui/Button";
 import { CheckCircle, Loader2, AlertCircle } from "lucide-react";
 import { createOrder } from "@/lib/api";
 
-export default function SuccessPage() {
+function SuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { clearCart } = useCart();
@@ -20,7 +21,6 @@ export default function SuccessPage() {
 
   useEffect(() => {
     const processOrder = async () => {
-      // Prevent double processing
       if (hasProcessed.current) return;
       hasProcessed.current = true;
 
@@ -34,19 +34,15 @@ export default function SuccessPage() {
 
       try {
         console.log("🔵 Creating order for session:", sessionId);
-        
-        // Create order in database
         const order = await createOrder(sessionId);
+        console.log("✅ Order created successfully:", order);
         
-        console.log("Order created successfully:", order);
         setOrderId(order.id);
-        
-        // Clear cart after successful order
         clearCart();
         setLoading(false);
       } catch (err) {
-        console.error("Failed to create order:", err);
-        setError("Failed to save your order. Please contact support with your session ID.");
+        console.error("❌ Failed to create order:", err);
+        setError("Failed to save your order. Please contact support.");
         setLoading(false);
       }
     };
@@ -54,7 +50,6 @@ export default function SuccessPage() {
     processOrder();
   }, [searchParams, clearCart]);
 
-  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center px-6">
@@ -71,7 +66,6 @@ export default function SuccessPage() {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center px-6">
@@ -97,7 +91,6 @@ export default function SuccessPage() {
     );
   }
 
-  // Success state
   return (
     <div className="min-h-screen flex items-center justify-center px-6">
       <div className="max-w-md w-full text-center flex flex-col items-center">
@@ -123,5 +116,17 @@ export default function SuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center px-6">
+        <Loader2 className="w-12 h-12 text-primary animate-spin" />
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }
