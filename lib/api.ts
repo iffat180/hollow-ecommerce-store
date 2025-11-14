@@ -16,7 +16,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5050/api';
 // Get all products
 export async function getAllProducts(): Promise<Product[]> {
   try {
-    const response = await fetch(`${API_URL}/products`);
+    const response = await fetch(`${API_URL}/api/products`);
     const result: ApiResponse<Product[]> = await response.json();
 
     if (!result.success || !result.data) {
@@ -33,7 +33,7 @@ export async function getAllProducts(): Promise<Product[]> {
 // Get single product by slug
 export async function getProductBySlug(slug: string): Promise<Product> {
   try {
-    const response = await fetch(`${API_URL}/products/${slug}`);
+    const response = await fetch(`${API_URL}/api/products/${slug}`);
     const result: ApiResponse<Product> = await response.json();
 
     if (!result.success || !result.data) {

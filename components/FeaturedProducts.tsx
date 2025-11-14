@@ -59,7 +59,7 @@ export default function FeaturedProducts() {
         <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 max-w-2xl mx-auto text-center">
           <p className="text-red-600 font-roboto mb-4">{error}</p>
           <p className="text-sm text-red-500 font-roboto">
-            Make sure your backend is running on http://localhost:5050
+            Failed to load products. Please try refreshing the page or come back later.
           </p>
         </div>
       )}
