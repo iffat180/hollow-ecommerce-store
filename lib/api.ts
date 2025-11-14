@@ -106,7 +106,7 @@ export async function verifyPayment(
 // Create order after payment
 export async function createOrder(sessionId: string): Promise<Order> {
   try {
-    const response = await fetch(`${API_URL}/orders`, {
+    const response = await fetch(`${API_URL}/api/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
