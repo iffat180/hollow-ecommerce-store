@@ -54,7 +54,7 @@ export async function createCheckoutSession(
   data: CheckoutSessionRequest
 ): Promise<CheckoutSessionResponse> {
   try {
-    const response = await fetch(`${API_URL}/checkout/create-session`, {
+    const response = await fetch(`${API_URL}/api/checkout/create-session`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ export async function verifyPayment(
   sessionId: string
 ): Promise<VerifyPaymentResponse> {
   try {
-    const response = await fetch(`${API_URL}/checkout/verify`, {
+    const response = await fetch(`${API_URL}/api/checkout/verify`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -130,7 +130,7 @@ export async function createOrder(sessionId: string): Promise<Order> {
 // Get order by ID
 export async function getOrderById(id: number): Promise<OrderWithItems> {
   try {
-    const response = await fetch(`${API_URL}/orders/${id}`);
+    const response = await fetch(`${API_URL}/api/orders/${id}`);
     const result: ApiResponse<OrderWithItems> = await response.json();
 
     if (!result.success || !result.data) {
