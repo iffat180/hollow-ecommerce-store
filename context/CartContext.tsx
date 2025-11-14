@@ -94,6 +94,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Clear entire cart
   const clearCart = () => {
     setCart([]);
+    localStorage.removeItem('hollow-cart');
   };
 
   return (
