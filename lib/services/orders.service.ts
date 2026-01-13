@@ -72,15 +72,18 @@ export async function createOrder(sessionId: string): Promise<Order> {
         const stripeProduct = item.price?.product;
 
         // Product Name (REQUIRED in DB)
-        const productName =
-          (typeof stripeProduct === 'object' ? stripeProduct?.name : null) ||
-          item.description ||
-          'Unknown Product';
+        // Handle Stripe product type: can be string (ID), Product object, or DeletedProduct
+        let productName: string | null = null;
+        if (typeof stripeProduct === 'object' && stripeProduct !== null && 'name' in stripeProduct) {
+          productName = stripeProduct.name as string;
+        }
+        
+        const productNameFinal = productName || item.description || 'Unknown Product';
 
         // Try to match product in "products" table
         const productLookup = await client.query(
           'SELECT id FROM products WHERE name = $1',
-          [productName]
+          [productNameFinal]
         );
 
         const productId =
@@ -94,7 +97,7 @@ export async function createOrder(sessionId: string): Promise<Order> {
           [
             order.id,
             productId,
-            productName,
+            productNameFinal,
             item.quantity || 1,
             item.amount_total ? item.amount_total / 100 : 0,
           ]
