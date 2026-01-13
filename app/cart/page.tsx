@@ -40,7 +40,7 @@ export default function CartPage() {
             <h1 className="font-roboto-slab text-4xl md:text-5xl font-bold text-text pb-4">
               Your Cart is Empty
             </h1>
-            <p className="text-lg text-text/70 pb-8">
+            <p className="text-lg text-zinc-800 pb-8">
               Looks like you haven't added anything to your cart yet.
             </p>
             <Button onClick={() => router.push("/shop")}>
@@ -61,13 +61,13 @@ export default function CartPage() {
             <h1 className="font-roboto-slab text-3xl md:text-4xl font-bold text-text pb-2">
               Shopping Cart
             </h1>
-            <p className="text-text/70">
+            <p className="text-zinc-800">
               {cart.length} {cart.length === 1 ? "item" : "items"} in your cart
             </p>
           </div>
           <button
             onClick={handleClearCart}
-            className="text-sm text-text/60 hover:text-primary transition-colors font-medium"
+            className="text-sm text-zinc-800 hover:text-primary transition-colors font-medium"
           >
             Clear Cart
           </button>
@@ -106,7 +106,7 @@ export default function CartPage() {
                         {item.name}
                       </h3>
                     </Link>
-                    <p className="text-sm text-text/60 pb-3">
+                    <p className="text-sm text-zinc-800 pb-3">
                       ${Number(item.price).toFixed(2)} each
                     </p>
                   </div>
@@ -151,7 +151,7 @@ export default function CartPage() {
 
                   <button
                     onClick={() => handleRemove(item.id, item.name)}
-                    className="text-text/60 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-lg"
+                    className="text-zinc-800 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-lg"
                     aria-label={`Remove ${item.name} from cart`}
                   >
                     <Trash2 className="w-5 h-5" />
@@ -169,15 +169,15 @@ export default function CartPage() {
               </h2>
 
               <div className="space-y-3 pb-6 mb-6 border-b border-text/10">
-                <div className="flex justify-between text-text/70">
+                <div className="flex justify-between text-zinc-800">
                   <span>Subtotal</span>
                   <span>${cartTotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-text/70">
+                <div className="flex justify-between text-zinc-800">
                   <span>Shipping</span>
                   <span className="text-green-600 font-semibold">FREE</span>
                 </div>
-                <div className="flex justify-between text-text/70">
+                <div className="flex justify-between text-zinc-800">
                   <span>Tax</span>
                   <span className="text-sm">Calculated at checkout</span>
                 </div>
@@ -208,7 +208,7 @@ export default function CartPage() {
               </div>
 
               {/* Trust Badges */}
-              <div className="pt-6 border-t border-text/10 space-y-2 text-sm text-text/60">
+              <div className="pt-6 border-t border-text/10 space-y-2 text-sm text-zinc-800">
                 <p className="flex items-center gap-2">
                   <span className="text-green-600">✓</span>
                   <span>Secure checkout</span>

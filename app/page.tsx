@@ -1,4 +1,3 @@
-
 import FeaturedProducts from "@/components/FeaturedProducts";
 import Hero from "@/components/Hero";
 import Inspire from "@/components/Inspire";

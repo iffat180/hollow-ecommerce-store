@@ -29,7 +29,7 @@ export default function CheckoutPage() {
             <h1 className="font-roboto-slab text-4xl md:text-5xl font-bold text-text pb-4">
               Your Cart is Empty
             </h1>
-            <p className="text-lg text-text/70 pb-8">
+            <p className="text-lg text-zinc-800 pb-8">
               Add some items to your cart before checking out.
             </p>
             <Button onClick={() => router.push("/shop")}>Start Shopping</Button>
@@ -109,7 +109,7 @@ export default function CheckoutPage() {
           <h1 className="font-roboto-slab text-3xl md:text-4xl font-bold text-text pb-2">
             Checkout
           </h1>
-          <p className="text-text/70">Complete your order</p>
+          <p className="text-zinc-800">Complete your order</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -187,11 +187,11 @@ export default function CheckoutPage() {
                     Payment
                   </h3>
                   <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                    <p className="text-sm text-text/70 pb-2">
+                    <p className="text-sm text-zinc-800 pb-2">
                       You will be redirected to Stripe's secure payment page to
                       complete your purchase.
                     </p>
-                    <div className="flex items-center gap-2 text-sm text-text/60">
+                    <div className="flex items-center gap-2 text-sm text-zinc-800">
                       <span>🔒</span>
                       <span>Payments are secured by Stripe</span>
                     </div>
@@ -206,7 +206,7 @@ export default function CheckoutPage() {
                       {isProcessing ? "Processing..." : "Pay with Stripe"}
                     </Button>
 
-                    <p className="text-xs text-text/50 text-center">
+                    <p className="text-xs text-zinc-700 text-center">
                       By clicking "Pay with Stripe", you agree to our terms and
                       conditions
                     </p>
@@ -217,7 +217,7 @@ export default function CheckoutPage() {
                 <button
                   type="button"
                   onClick={() => router.push("/cart")}
-                  className="w-full text-center text-text/70 hover:text-primary transition-colors py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+                  className="w-full text-center text-zinc-800 hover:text-primary transition-colors py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
                   aria-label="Go back to cart"
                 >
                   ← Back to Cart
@@ -256,7 +256,7 @@ export default function CheckoutPage() {
                       <h4 className="font-roboto-slab text-text font-medium text-sm line-clamp-2">
                         {item.name}
                       </h4>
-                      <p className="text-sm text-text/60">Qty: {item.quantity}</p>
+                      <p className="text-sm text-zinc-800">Qty: {item.quantity}</p>
                       <p className="text-sm text-primary font-semibold">
                         ${(Number(item.price) * item.quantity).toFixed(2)}
                       </p>
@@ -267,15 +267,15 @@ export default function CheckoutPage() {
 
               {/* Price Breakdown */}
               <div className="space-y-3 pb-6 mb-6 border-b border-text/10">
-                <div className="flex justify-between text-text/70">
+                <div className="flex justify-between text-zinc-800">
                   <span>Subtotal</span>
                   <span>${cartTotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-text/70">
+                <div className="flex justify-between text-zinc-800">
                   <span>Shipping</span>
                   <span className="text-green-600 font-semibold">FREE</span>
                 </div>
-                <div className="flex justify-between text-text/70">
+                <div className="flex justify-between text-zinc-800">
                   <span>Tax</span>
                   <span className="text-sm">Calculated at checkout</span>
                 </div>
@@ -290,7 +290,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Trust Badges */}
-              <div className="pt-6 border-t border-text/10 space-y-2 text-sm text-text/60">
+              <div className="pt-6 border-t border-text/10 space-y-2 text-sm text-zinc-800">
                 <p className="flex items-center gap-2">
                   <span className="text-green-600">✓</span>
                   <span>Secure checkout powered by Stripe</span>

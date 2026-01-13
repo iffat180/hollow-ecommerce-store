@@ -9,14 +9,19 @@ import {
   OrderWithItems,
 } from './types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5050/api';
+// Use relative paths for Next.js API routes (no external API URL needed)
+// Next.js will handle routing internally
 
 // ==================== PRODUCTS ====================
 
-// Get all products
+/**
+ * Get all products
+ */
 export async function getAllProducts(): Promise<Product[]> {
   try {
-    const response = await fetch(`${API_URL}/api/products`);
+    const response = await fetch('/api/products', {
+      cache: 'no-store', // Disable caching for fresh data
+    });
     const result: ApiResponse<Product[]> = await response.json();
 
     if (!result.success || !result.data) {
@@ -30,10 +35,14 @@ export async function getAllProducts(): Promise<Product[]> {
   }
 }
 
-// Get single product by slug
+/**
+ * Get single product by slug
+ */
 export async function getProductBySlug(slug: string): Promise<Product> {
   try {
-    const response = await fetch(`${API_URL}/api/products/${slug}`);
+    const response = await fetch(`/api/products/${slug}`, {
+      cache: 'no-store', // Disable caching for fresh data
+    });
     const result: ApiResponse<Product> = await response.json();
 
     if (!result.success || !result.data) {
@@ -49,12 +58,14 @@ export async function getProductBySlug(slug: string): Promise<Product> {
 
 // ==================== CHECKOUT ====================
 
-// Create Stripe checkout session
+/**
+ * Create Stripe checkout session
+ */
 export async function createCheckoutSession(
   data: CheckoutSessionRequest
 ): Promise<CheckoutSessionResponse> {
   try {
-    const response = await fetch(`${API_URL}/api/checkout/create-session`, {
+    const response = await fetch('/api/checkout/create-session', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -75,12 +86,14 @@ export async function createCheckoutSession(
   }
 }
 
-// Verify payment
+/**
+ * Verify payment
+ */
 export async function verifyPayment(
   sessionId: string
 ): Promise<VerifyPaymentResponse> {
   try {
-    const response = await fetch(`${API_URL}/api/checkout/verify`, {
+    const response = await fetch('/api/checkout/verify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -103,10 +116,12 @@ export async function verifyPayment(
 
 // ==================== ORDERS ====================
 
-// Create order after payment
+/**
+ * Create order after payment
+ */
 export async function createOrder(sessionId: string): Promise<Order> {
   try {
-    const response = await fetch(`${API_URL}/api/orders`, {
+    const response = await fetch('/api/orders', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -127,10 +142,14 @@ export async function createOrder(sessionId: string): Promise<Order> {
   }
 }
 
-// Get order by ID
+/**
+ * Get order by ID
+ */
 export async function getOrderById(id: number): Promise<OrderWithItems> {
   try {
-    const response = await fetch(`${API_URL}/api/orders/${id}`);
+    const response = await fetch(`/api/orders/${id}`, {
+      cache: 'no-store', // Disable caching for fresh data
+    });
     const result: ApiResponse<OrderWithItems> = await response.json();
 
     if (!result.success || !result.data) {

@@ -13,7 +13,7 @@ export interface Product {
   created_at: string;
 }
 
-// Cart Item (Frontend only - includes quantity)
+// Cart Item (Frontend only)
 export interface CartItem {
   id: number;
   name: string;

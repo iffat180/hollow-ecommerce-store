@@ -50,7 +50,7 @@ export default function ContactPage() {
             Let’s Talk About <br />
             <span className="text-primary">Your Safety Needs</span>
           </h1>
-          <p className="text-lg text-text/70 max-w-2xl mx-auto">
+          <p className="text-lg text-zinc-800 max-w-2xl mx-auto">
             Reach out to our team for inquiries, product info, or support. We’ll
             respond within 24 hours.
           </p>
@@ -64,7 +64,7 @@ export default function ContactPage() {
               <Mail className="w-6 h-6 text-primary hrink-0" />
               <div>
                 <h3 className="font-semibold text-text pb-1">Email Us</h3>
-                <p className="text-text/70 text-sm">
+                <p className="text-zinc-800 text-sm">
                   support@hollow.com <br /> sales@hollow.com
                 </p>
               </div>
@@ -74,7 +74,7 @@ export default function ContactPage() {
               <Phone className="w-6 h-6 text-primary shrink-0" />
               <div>
                 <h3 className="font-semibold text-text pb-1">Call Us</h3>
-                <p className="text-text/70 text-sm">
+                <p className="text-zinc-800 text-sm">
                   +1 (555) 123-4567 <br /> +1 (555) 765-4321
                 </p>
               </div>
@@ -84,7 +84,7 @@ export default function ContactPage() {
               <MapPin className="w-6 h-6 text-primary shrink-0" />
               <div>
                 <h3 className="font-semibold text-text pb-1">Visit Us</h3>
-                <p className="text-text/70 text-sm">
+                <p className="text-zinc-800 text-sm">
                   123 Safety Street, Cleveland Heights, OH
                 </p>
               </div>
@@ -94,7 +94,7 @@ export default function ContactPage() {
               <Clock className="w-6 h-6 text-primary shrink-0" />
               <div>
                 <h3 className="font-semibold text-text pb-1">Business Hours</h3>
-                <p className="text-text/70 text-sm">
+                <p className="text-zinc-800 text-sm">
                   Mon–Fri: 9am–6pm <br /> Sat: 10am–4pm
                 </p>
               </div>
@@ -106,7 +106,7 @@ export default function ContactPage() {
             <h2 className="font-roboto-slab text-2xl md:text-3xl font-bold text-text pb-3">
               Send Us a Message
             </h2>
-            <p className="text-text/60 pb-6 text-sm md:text-base">
+            <p className="text-zinc-800 pb-6 text-sm md:text-base">
               Fill out the form and we’ll get back to you shortly.
             </p>
 

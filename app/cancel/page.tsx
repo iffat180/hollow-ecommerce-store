@@ -14,7 +14,7 @@ export default function CancelPage() {
         <h1 className="font-roboto-slab text-4xl font-bold text-text pb-4">
           Payment Cancelled
         </h1>
-        <p className="text-text/70 pb-8">
+        <p className="text-zinc-800 pb-8">
           Your payment was cancelled. No charges were made. Your cart items are
           still saved.
         </p>
