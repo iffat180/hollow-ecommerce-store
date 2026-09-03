@@ -1,8 +1,5 @@
 import { Pool } from 'pg';
 
-// Next.js handles environment variables automatically
-// No need for dotenv.config()
-
 // Initialize pool only if DATABASE_URL exists
 // This prevents blocking server startup if env var is missing
 const pool: Pool | null = process.env.DATABASE_URL 

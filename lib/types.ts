@@ -29,8 +29,8 @@ export interface Order {
   stripe_session_id: string;
   customer_email: string;
   customer_name: string;
-  total: number;
-  status: 'pending' | 'completed' | 'cancelled';
+  amount_total: number;
+  payment_status: 'pending' | 'paid' | 'shipped' | 'cancelled';
   created_at: string;
 }
 
