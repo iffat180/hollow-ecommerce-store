@@ -78,5 +78,5 @@ export interface VerifyPaymentResponse {
   customerName: string;
   amountTotal: number;
   paymentStatus: string;
-  lineItems?: any;
+  lineItems?: unknown;
 }

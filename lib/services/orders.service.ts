@@ -3,30 +3,51 @@ import stripe from '../config/stripe';
 import { Order, OrderWithItems } from '../types';
 
 /**
- * Create an order from a completed Stripe checkout session.
+ * Record that a Stripe webhook event has been handled.
+ * @returns true if this is the first time we've seen the event (process it),
+ *          false if it was already processed (skip — Stripe re-delivered it).
+ */
+export async function claimStripeEvent(
+  eventId: string,
+  eventType: string
+): Promise<boolean> {
+  if (!pool) throw new Error('Database not configured');
+  const result = await pool.query(
+    `INSERT INTO processed_stripe_events (event_id, event_type)
+     VALUES ($1, $2)
+     ON CONFLICT (event_id) DO NOTHING`,
+    [eventId, eventType]
+  );
+  return (result.rowCount ?? 0) > 0;
+}
+
+/**
+ * Undo claimStripeEvent — call this if handling the event failed, so a Stripe
+ * retry re-processes it instead of being skipped as a duplicate.
+ */
+export async function releaseStripeEvent(eventId: string): Promise<void> {
+  if (!pool) return;
+  await pool.query('DELETE FROM processed_stripe_events WHERE event_id = $1', [eventId]);
+}
+
+/**
+ * Reconcile the local order for a Stripe checkout session against Stripe,
+ * which is the source of truth:
+ *   - session paid, no local order      -> create order + items
+ *   - session paid, local order exists  -> ensure payment_status matches
+ *   - session not paid                  -> throws PAYMENT_NOT_COMPLETED
  *
- * Idempotent and race-safe: it can be called multiple times for the same
- * session id (Stripe retries webhooks; the browser may hit /success more than
- * once) and will only ever create one order + one set of order_items.
- *
- * @param sessionId - Stripe checkout session id
- * @returns the order plus whether this call was the one that created it
- * @throws Error('Payment not completed') with code 'PAYMENT_NOT_COMPLETED'
+ * Idempotent and race-safe (UNIQUE stripe_session_id + ON CONFLICT, all in a
+ * transaction), so the browser /success call and repeated webhook deliveries
+ * can all run this without creating duplicates.
  */
 export async function persistOrderFromSession(
   sessionId: string
-): Promise<{ order: Order; created: boolean }> {
-  if (!sessionId) {
-    throw new Error('Session ID is required');
-  }
-  if (!pool) {
-    throw new Error('Database not configured. Set DATABASE_URL in .env.local');
-  }
-  if (!stripe) {
-    throw new Error('Stripe not configured. Set STRIPE_SECRET_KEY in .env.local');
-  }
+): Promise<{ order: Order; created: boolean; reconciled: boolean }> {
+  if (!sessionId) throw new Error('Session ID is required');
+  if (!pool) throw new Error('Database not configured');
+  if (!stripe) throw new Error('Stripe not configured');
 
-  // Pull the session (with line items) from Stripe — the source of truth.
   const session = await stripe.checkout.sessions.retrieve(sessionId, {
     expand: ['line_items', 'line_items.data.price.product'],
   });
@@ -41,9 +62,6 @@ export async function persistOrderFromSession(
   try {
     await client.query('BEGIN');
 
-    // Insert the order. The UNIQUE constraint on stripe_session_id + ON CONFLICT
-    // makes this atomic: concurrent callers can't both create a row, and there
-    // is no check-then-insert race.
     const insertResult = await client.query<Order>(
       `INSERT INTO orders
          (stripe_session_id, customer_email, customer_name, amount_total, payment_status)
@@ -59,19 +77,27 @@ export async function persistOrderFromSession(
       ]
     );
 
-    // Zero rows back => the order already existed. Return it, don't re-insert items.
+    // Order already existed -> reconcile its status, leave items alone.
     if (insertResult.rows.length === 0) {
-      const existing = await client.query<Order>(
-        'SELECT * FROM orders WHERE stripe_session_id = $1',
+      const updated = await client.query<Order>(
+        `UPDATE orders SET payment_status = 'paid'
+         WHERE stripe_session_id = $1 AND payment_status <> 'paid'
+         RETURNING *`,
         [session.id]
       );
+      const existing =
+        updated.rows[0] ??
+        (
+          await client.query<Order>('SELECT * FROM orders WHERE stripe_session_id = $1', [
+            session.id,
+          ])
+        ).rows[0];
       await client.query('COMMIT');
-      return { order: existing.rows[0], created: false };
+      return { order: existing, created: false, reconciled: updated.rows.length > 0 };
     }
 
     const order = insertResult.rows[0];
 
-    // Insert one order_items row per line item, in the same transaction.
     for (const item of session.line_items?.data ?? []) {
       const stripeProduct = item.price?.product;
       const productName =
@@ -81,16 +107,13 @@ export async function persistOrderFromSession(
           ? (stripeProduct.name as string)
           : item.description || 'Unknown Product';
 
-      const productLookup = await client.query(
-        'SELECT id FROM products WHERE name = $1',
-        [productName]
-      );
-      const productId =
-        productLookup.rows.length > 0 ? productLookup.rows[0].id : null;
+      const productLookup = await client.query('SELECT id FROM products WHERE name = $1', [
+        productName,
+      ]);
+      const productId = productLookup.rows.length > 0 ? productLookup.rows[0].id : null;
 
       await client.query(
-        `INSERT INTO order_items
-           (order_id, product_id, product_name, quantity, price)
+        `INSERT INTO order_items (order_id, product_id, product_name, quantity, price)
          VALUES ($1, $2, $3, $4, $5)`,
         [
           order.id,
@@ -103,7 +126,7 @@ export async function persistOrderFromSession(
     }
 
     await client.query('COMMIT');
-    return { order, created: true };
+    return { order, created: true, reconciled: false };
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
@@ -113,28 +136,34 @@ export async function persistOrderFromSession(
 }
 
 /**
+ * Mark the order for a session as cancelled — used when Stripe reports the
+ * payment failed or the checkout session expired. No-op if there's no order.
+ */
+export async function cancelOrderForSession(sessionId: string): Promise<void> {
+  if (!pool) throw new Error('Database not configured');
+  await pool.query(
+    `UPDATE orders SET payment_status = 'cancelled'
+     WHERE stripe_session_id = $1 AND payment_status NOT IN ('paid', 'shipped')`,
+    [sessionId]
+  );
+}
+
+/**
  * Get an order by id, with its line items (joined to products for name/image).
- * @returns the order with items, or null if not found
  */
 export async function getOrderById(id: number): Promise<OrderWithItems | null> {
-  if (!pool) {
-    throw new Error('Database not configured. Set DATABASE_URL in .env.local');
-  }
+  if (!pool) throw new Error('Database not configured');
 
   const orderResult = await pool.query('SELECT * FROM orders WHERE id = $1', [id]);
-  if (orderResult.rows.length === 0) {
-    return null;
-  }
-
-  const order = orderResult.rows[0];
+  if (orderResult.rows.length === 0) return null;
 
   const itemsResult = await pool.query(
-    `SELECT oi.*, p.name AS product_name_lookup, p.image_url
+    `SELECT oi.*, p.image_url
      FROM order_items oi
      LEFT JOIN products p ON oi.product_id = p.id
      WHERE oi.order_id = $1`,
     [id]
   );
 
-  return { ...order, items: itemsResult.rows };
+  return { ...orderResult.rows[0], items: itemsResult.rows };
 }
