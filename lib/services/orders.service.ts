@@ -149,21 +149,29 @@ export async function cancelOrderForSession(sessionId: string): Promise<void> {
 }
 
 /**
- * Get an order by id, with its line items (joined to products for name/image).
+ * Get an order by its Stripe checkout session id, with its line items
+ * (joined to products for the image).
  */
-export async function getOrderById(id: number): Promise<OrderWithItems | null> {
+export async function getOrderBySession(
+  sessionId: string
+): Promise<OrderWithItems | null> {
   if (!pool) throw new Error('Database not configured');
 
-  const orderResult = await pool.query('SELECT * FROM orders WHERE id = $1', [id]);
+  const orderResult = await pool.query(
+    'SELECT * FROM orders WHERE stripe_session_id = $1',
+    [sessionId]
+  );
   if (orderResult.rows.length === 0) return null;
+
+  const order = orderResult.rows[0];
 
   const itemsResult = await pool.query(
     `SELECT oi.*, p.image_url
      FROM order_items oi
      LEFT JOIN products p ON oi.product_id = p.id
      WHERE oi.order_id = $1`,
-    [id]
+    [order.id]
   );
 
-  return { ...orderResult.rows[0], items: itemsResult.rows };
+  return { ...order, items: itemsResult.rows };
 }

@@ -1,59 +1,87 @@
 import stripe from '../config/stripe';
-import { CheckoutSessionRequest, CheckoutSessionResponse, VerifyPaymentResponse } from '../types';
+import pool from '../config/database';
+import {
+  CheckoutSessionRequest,
+  CheckoutSessionResponse,
+  VerifyPaymentResponse,
+} from '../types';
 
 /**
- * Create a Stripe checkout session
- * @param data - Checkout session request data
- * @returns Stripe session ID and URL
- * @throws Error if session creation fails or validation fails
+ * Create a Stripe Checkout session for the given cart.
+ *
+ * Security note: the client only gets to choose *which product* and *how many*.
+ * Names, prices and images are read from the database here — never trusted from
+ * the request body — so a tampered cart can't set its own price.
  */
 export async function createCheckoutSession(
   data: CheckoutSessionRequest
 ): Promise<CheckoutSessionResponse> {
-  // Check if Stripe is configured
   if (!stripe) {
-    throw new Error('Stripe not configured. Please set STRIPE_SECRET_KEY in your .env.local file.');
+    throw new Error('Stripe not configured. Set STRIPE_SECRET_KEY in .env.local');
+  }
+  if (!pool) {
+    throw new Error('Database not configured. Set DATABASE_URL in .env.local');
   }
 
   const { items, customerEmail, customerName } = data;
 
-  // Validate request
   if (!items || !Array.isArray(items) || items.length === 0) {
     throw new Error('Cart items are required');
   }
-
   if (!customerEmail || !customerName) {
     throw new Error('Customer email and name are required');
   }
 
-  // Format items for Stripe
-  const lineItems = items.map((item) => ({
-    price_data: {
-      currency: 'usd',
-      product_data: {
-        name: item.name,
-        images: item.image_url
-          ? [`${item.image_url.startsWith('http') 
-              ? item.image_url 
-              : `${process.env.NEXT_PUBLIC_BASE_URL || ''}${item.image_url}`}`]
-          : [],
-      },
-      unit_amount: Math.round(item.price * 100), // Convert to cents
-    },
-    quantity: item.quantity,
-  }));
-
-  // Create Stripe checkout session
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+  if (!baseUrl || !baseUrl.startsWith('http')) {
+    throw new Error('NEXT_PUBLIC_BASE_URL must be set to an absolute URL');
+  }
 
-  if (!baseUrl) {
-    throw new Error('NEXT_PUBLIC_BASE_URL is not defined');
+  // Normalise the requested quantities, keyed by product id.
+  const quantities = new Map<number, number>();
+  for (const item of items) {
+    const id = Number(item.id);
+    const qty = Number(item.quantity);
+    if (!Number.isInteger(id) || id <= 0) {
+      throw new Error('Invalid product in cart');
+    }
+    if (!Number.isInteger(qty) || qty <= 0 || qty > 99) {
+      throw new Error('Invalid quantity in cart');
+    }
+    quantities.set(id, (quantities.get(id) ?? 0) + qty);
   }
-  
-  if (!baseUrl.startsWith('http')) {
-    throw new Error('NEXT_PUBLIC_BASE_URL must be an absolute URL');
+
+  // Look up the real products. This is the source of truth for price/name/image.
+  const ids = [...quantities.keys()];
+  const { rows: products } = await pool.query(
+    `SELECT id, name, price, image_url FROM products WHERE id = ANY($1::int[])`,
+    [ids]
+  );
+
+  if (products.length !== ids.length) {
+    throw new Error('One or more products in the cart no longer exist');
   }
-  
+
+  const lineItems = products.map((product) => {
+    const image = product.image_url
+      ? product.image_url.startsWith('http')
+        ? product.image_url
+        : `${baseUrl}${product.image_url}`
+      : undefined;
+
+    return {
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: product.name,
+          ...(image ? { images: [image] } : {}),
+        },
+        unit_amount: Math.round(Number(product.price) * 100), // dollars -> cents
+      },
+      quantity: quantities.get(product.id)!,
+    };
+  });
+
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     line_items: lineItems,
@@ -61,11 +89,8 @@ export async function createCheckoutSession(
     success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${baseUrl}/cancel`,
     customer_email: customerEmail,
-    metadata: {
-      customerName,
-    },
+    metadata: { customerName },
   });
-  
 
   return {
     sessionId: session.id,
@@ -74,27 +99,20 @@ export async function createCheckoutSession(
 }
 
 /**
- * Verify payment status of a Stripe checkout session
- * @param sessionId - Stripe session ID
- * @returns Payment verification details
- * @throws Error if session not found or payment not completed
+ * Verify the payment status of a Stripe checkout session (read-only).
  */
 export async function verifyPayment(sessionId: string): Promise<VerifyPaymentResponse> {
-  // Check if Stripe is configured
   if (!stripe) {
-    throw new Error('Stripe not configured. Please set STRIPE_SECRET_KEY in your .env.local file.');
+    throw new Error('Stripe not configured. Set STRIPE_SECRET_KEY in .env.local');
   }
-
   if (!sessionId) {
     throw new Error('Session ID is required');
   }
 
-  // Retrieve session from Stripe
   const session = await stripe.checkout.sessions.retrieve(sessionId, {
     expand: ['line_items', 'line_items.data.price.product'],
   });
 
-  // Check if payment was successful
   if (session.payment_status !== 'paid') {
     throw new Error('Payment not completed');
   }

@@ -143,11 +143,11 @@ export async function createOrder(sessionId: string): Promise<Order> {
 }
 
 /**
- * Get order by ID
+ * Get order by Stripe checkout session id
  */
-export async function getOrderById(id: number): Promise<OrderWithItems> {
+export async function getOrderBySession(sessionId: string): Promise<OrderWithItems> {
   try {
-    const response = await fetch(`/api/orders/${id}`, {
+    const response = await fetch(`/api/orders/${sessionId}`, {
       cache: 'no-store', // Disable caching for fresh data
     });
     const result: ApiResponse<OrderWithItems> = await response.json();
